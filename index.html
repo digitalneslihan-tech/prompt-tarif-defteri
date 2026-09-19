@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prompt Tarif Defteri</title>
+<meta name="description" content="Claude Code ile çalışırken çıkardığım 5 prompt, ne oldu ve ne öğrendiğim — kaydırmadan, tek ekranda.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#E9EDEE;
+    --paper-alt:#DBE1E3;
+    --ink:#1C2A32;
+    --ink-soft:#51626B;
+    --accent:#B9902F;
+    --accent-ink:#6B4E14;
+    --line:rgba(28,42,50,0.15);
+    --prompt-bg:#16232A;
+    --prompt-text:#E7ECD9;
+    --prompt-accent:#8FD6C0;
+    --shadow:0 1px 2px rgba(28,42,50,0.08);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#12181B;
+      --paper-alt:#1A2226;
+      --ink:#E8EBEA;
+      --ink-soft:#A6B2B6;
+      --accent:#E0B65A;
+      --accent-ink:#F2D28A;
+      --line:rgba(232,235,234,0.16);
+      --prompt-bg:#0A1013;
+      --prompt-text:#DCE7DA;
+      --prompt-accent:#7FD9BE;
+      --shadow:0 1px 2px rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#12181B;
+    --paper-alt:#1A2226;
+    --ink:#E8EBEA;
+    --ink-soft:#A6B2B6;
+    --accent:#E0B65A;
+    --accent-ink:#F2D28A;
+    --line:rgba(232,235,234,0.16);
+    --prompt-bg:#0A1013;
+    --prompt-text:#DCE7DA;
+    --prompt-accent:#7FD9BE;
+    --shadow:0 1px 2px rgba(0,0,0,0.4);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans',system-ui,sans-serif;
+    overflow:hidden;
+    display:flex;
+    justify-content:center;
+  }
+  img{max-width:100%;}
+  [hidden]{display:none!important;}
+
+  .app{
+    width:100%;
+    max-width:640px;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    padding:16px;
+    gap:clamp(8px,1.6vh,14px);
+  }
+
+  header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:12px;
+    flex:0 0 auto;
+  }
+  header h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:clamp(1.05rem,3.4vh,1.4rem);
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  header .count{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:clamp(0.7rem,1.8vh,0.85rem);
+    color:var(--ink-soft);
+    white-space:nowrap;
+  }
+
+  .card{
+    flex:1 1 auto;
+    min-height:0;
+    background:var(--paper-alt);
+    border:1px solid var(--line);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    padding:clamp(12px,2.4vh,20px);
+    display:flex;
+    flex-direction:column;
+    gap:clamp(6px,1.4vh,12px);
+  }
+
+  .eyebrow{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex:0 0 auto;
+  }
+  .eyebrow .num{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:clamp(0.75rem,2vh,0.9rem);
+    color:var(--accent-ink);
+    background:color-mix(in srgb, var(--accent) 22%, transparent);
+    border-radius:999px;
+    padding:2px 10px;
+  }
+  .eyebrow h2{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:clamp(0.95rem,2.6vh,1.15rem);
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+
+  .block{
+    flex:1 1 0;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:clamp(0.6rem,1.4vh,0.68rem);
+    letter-spacing:0.08em;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    flex:0 0 auto;
+  }
+
+  .prompt-box{
+    flex:1 1 0;
+    min-height:0;
+    background:var(--prompt-bg);
+    border-radius:8px;
+    padding:clamp(8px,1.6vh,12px) clamp(10px,2vw,14px);
+    display:flex;
+    align-items:center;
+  }
+  .prompt-box p{
+    margin:0;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:clamp(0.72rem,1.9vh,0.88rem);
+    line-height:1.45;
+    color:var(--prompt-text);
+    display:-webkit-box;
+    -webkit-line-clamp:4;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .prompt-box p::before{
+    content:"$ ";
+    color:var(--prompt-accent);
+  }
+
+  .text-box{
+    flex:1 1 0;
+    min-height:0;
+    display:flex;
+    align-items:center;
+  }
+  .text-box p{
+    margin:0;
+    font-size:clamp(0.78rem,1.9vh,0.92rem);
+    line-height:1.45;
+    color:var(--ink);
+    display:-webkit-box;
+    -webkit-line-clamp:3;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+
+  .learned .text-box{
+    border-left:3px solid var(--accent);
+    padding-left:10px;
+  }
+  .learned .text-box p{
+    font-style:italic;
+    color:var(--ink);
+  }
+
+  footer{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .nav-btn{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:clamp(0.7rem,1.6vh,0.82rem);
+    color:var(--ink);
+    background:var(--paper-alt);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 12px;
+    cursor:pointer;
+  }
+  .nav-btn:disabled{
+    opacity:0.35;
+    cursor:default;
+  }
+  .nav-btn:not(:disabled):hover{
+    border-color:var(--accent);
+  }
+  .dots{
+    display:flex;
+    gap:6px;
+  }
+  .dot{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:var(--line);
+    border:none;
+    padding:0;
+    cursor:pointer;
+  }
+  .dot.active{
+    background:var(--accent);
+  }
+
+  @media (prefers-reduced-motion: no-preference){
+    .card{transition:opacity 0.15s ease;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <h1>Prompt Tarif Defteri</h1>
+    <span class="count" id="count">01 / 05</span>
+  </header>
+
+  <div class="card" id="card"></div>
+
+  <footer>
+    <button class="nav-btn" id="prev">&larr; önceki</button>
+    <div class="dots" id="dots"></div>
+    <button class="nav-btn" id="next">sonraki &rarr;</button>
+  </footer>
+</div>
+
+<script>
+  var entries = [
+    {
+      title: "İlk Kurulum: Meta Ads",
+      prompt: "Ayka Hasır için Meta Ads hesabını kampanya, reklam seti ve kreatif yapısıyla uçtan uca kur.",
+      result: "Claude kampanya hiyerarşisini, hedef kitleyi ve reklam setlerini kurdu; tek eksik adım ödeme yöntemiydi.",
+      learned: "“Kurulum bitti” ile “is bitti” ayrı şeyler — hesabın dışında kalan tek adım bile işi durdurabilir."
+    },
+    {
+      title: "Sayılarla Denetim: SEO/GEO",
+      prompt: "Ayka Hasır'ın ürün sayfalarını SEO ve yapay zekâ arama motorları açısından denetle, sorunları say ve sırala.",
+      result: "155 üründen 105'inin başlığı kopya ya da bozuk çıktı; blog, yorum ve AI referansı sıfır bulundu.",
+      learned: "“SEO'muz zayıf” demek yerine “105/155” demek — sayı, önceliği kendiliğinden gösteriyor."
+    },
+    {
+      title: "Tek Ton, Dört Ajan",
+      prompt: "Ayka Hasır için aynı marka sesini paylaşan 4 içerik ajanı kur, hepsi tek bir ton dosyasına baksın.",
+      result: "4 Claude Code subagent'ı, paylaşılan MARKA-SESI-TONU.md dosyasına bağlı olarak kuruldu.",
+      learned: "Ajanları tutarlı tutmanın yolu her birine ayrı talimat yazmak değil, hepsinin okuduğu tek kaynak dosya."
+    },
+    {
+      title: "Tek Dosyada Bir İş",
+      prompt: "WealthPath koçluğum için dashboard, ön görüşme formu ve randevu almayı tek bir HTML dosyasında birleştir.",
+      result: "Üç özelliği de barındıran tek dosyalık wealthpath.html ortaya çıktı.",
+      learned: "Küçük bir iş için “tek dosya” istemek, dağınık bir proje yapısından daha yönetilebilir çıktı veriyor."
+    },
+    {
+      title: "Öğrendiğini Hemen Kullan",
+      prompt: "cheatsheet.md adında bir dosya yaz: 10 temel shell komutu, her biri için tek satır açıklama ve gerçek örnek.",
+      result: "Dosya yazıldı; GitHub CLI zaten bağlı olduğu için tek komutla public gist olarak yayınlandı.",
+      learned: "Az önce öğrendiğin bir komutu bir sonraki adımda hemen kullanmak, bilgiyi kalıcı hâle getiriyor."
+    }
+  ];
+
+  var idx = 0;
+  try {
+    var saved = parseInt(localStorage.getItem("ptd-idx"), 10);
+    if (!isNaN(saved) && saved >= 0 && saved < entries.length) idx = saved;
+  } catch (e) {}
+
+  var cardEl = document.getElementById("card");
+  var countEl = document.getElementById("count");
+  var dotsEl = document.getElementById("dots");
+  var prevBtn = document.getElementById("prev");
+  var nextBtn = document.getElementById("next");
+
+  function pad(n){ return n < 10 ? "0" + n : "" + n; }
+
+  function render(){
+    var e = entries[idx];
+    cardEl.innerHTML =
+      '<div class="eyebrow"><span class="num">TARİF ' + pad(idx+1) + '</span><h2>' + e.title + '</h2></div>' +
+      '<div class="block">' +
+        '<span class="label">Prompt</span>' +
+        '<div class="prompt-box"><p>' + e.prompt + '</p></div>' +
+      '</div>' +
+      '<div class="block">' +
+        '<span class="label">Claude ne yaptı</span>' +
+        '<div class="text-box"><p>' + e.result + '</p></div>' +
+      '</div>' +
+      '<div class="block learned">' +
+        '<span class="label">Ne öğrendim</span>' +
+        '<div class="text-box"><p>' + e.learned + '</p></div>' +
+      '</div>';
+
+    countEl.textContent = pad(idx+1) + " / " + pad(entries.length);
+    prevBtn.disabled = idx === 0;
+    nextBtn.disabled = idx === entries.length - 1;
+
+    dotsEl.innerHTML = "";
+    entries.forEach(function(_, i){
+      var d = document.createElement("button");
+      d.className = "dot" + (i === idx ? " active" : "");
+      d.setAttribute("aria-label", "Tarif " + (i+1));
+      d.onclick = function(){ idx = i; render(); save(); };
+      dotsEl.appendChild(d);
+    });
+  }
+
+  function save(){
+    try { localStorage.setItem("ptd-idx", idx); } catch (e) {}
+  }
+
+  prevBtn.onclick = function(){ if (idx > 0) { idx--; render(); save(); } };
+  nextBtn.onclick = function(){ if (idx < entries.length - 1) { idx++; render(); save(); } };
+
+  document.addEventListener("keydown", function(ev){
+    if (ev.key === "ArrowLeft") prevBtn.onclick();
+    if (ev.key === "ArrowRight") nextBtn.onclick();
+  });
+
+  render();
+</script>
+</body>
+</html>
