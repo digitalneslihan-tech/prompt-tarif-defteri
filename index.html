@@ -309,22 +309,18 @@
 
   function pad(n){ return n < 10 ? "0" + n : "" + n; }
 
+  function renderBlock(label, innerHtml, extraClass){
+    return '<div class="block' + (extraClass ? ' ' + extraClass : '') + '">' +
+      '<span class="label">' + label + '</span>' + innerHtml + '</div>';
+  }
+
   function render(){
-    var e = entries[idx];
+    var entry = entries[idx];
     cardEl.innerHTML =
-      '<div class="eyebrow"><span class="num">TARİF ' + pad(idx+1) + '</span><h2>' + e.title + '</h2></div>' +
-      '<div class="block">' +
-        '<span class="label">Prompt</span>' +
-        '<div class="prompt-box"><p>' + e.prompt + '</p></div>' +
-      '</div>' +
-      '<div class="block">' +
-        '<span class="label">Claude ne yaptı</span>' +
-        '<div class="text-box"><p>' + e.result + '</p></div>' +
-      '</div>' +
-      '<div class="block learned">' +
-        '<span class="label">Ne öğrendim</span>' +
-        '<div class="text-box"><p>' + e.learned + '</p></div>' +
-      '</div>';
+      '<div class="eyebrow"><span class="num">TARİF ' + pad(idx+1) + '</span><h2>' + entry.title + '</h2></div>' +
+      renderBlock('Prompt', '<div class="prompt-box"><p>' + entry.prompt + '</p></div>') +
+      renderBlock('Claude ne yaptı', '<div class="text-box"><p>' + entry.result + '</p></div>') +
+      renderBlock('Ne öğrendim', '<div class="text-box"><p>' + entry.learned + '</p></div>', 'learned');
 
     countEl.textContent = pad(idx+1) + " / " + pad(entries.length);
     prevBtn.disabled = idx === 0;
@@ -344,12 +340,17 @@
     try { localStorage.setItem("ptd-idx", idx); } catch (e) {}
   }
 
-  prevBtn.onclick = function(){ if (idx > 0) { idx--; render(); save(); } };
-  nextBtn.onclick = function(){ if (idx < entries.length - 1) { idx++; render(); save(); } };
+  function goTo(newIdx){
+    if (newIdx < 0 || newIdx >= entries.length) return;
+    idx = newIdx; render(); save();
+  }
+
+  prevBtn.onclick = function(){ goTo(idx - 1); };
+  nextBtn.onclick = function(){ goTo(idx + 1); };
 
   document.addEventListener("keydown", function(ev){
-    if (ev.key === "ArrowLeft") prevBtn.onclick();
-    if (ev.key === "ArrowRight") nextBtn.onclick();
+    if (ev.key === "ArrowLeft") goTo(idx - 1);
+    if (ev.key === "ArrowRight") goTo(idx + 1);
   });
 
   render();
